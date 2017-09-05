@@ -15,7 +15,11 @@
 xxx.html<br/>
 xxx.js<br/>
 xxxCatalog.js<br/>
-xxx.html同时加载后面两个js，目录代码全放xxxCatalog.js代码。
+xxx.html同时加载后面两个js，目录代码全放xxxCatalog.js代码,如下图所示导入js
+```html
+<script type="text/javascript" src="js/operDescCatalog.js"></script>
+<script type="text/javascript" src="js/operDesc.js"></script>
+```
 树的html代码
 ```html
 <div class="panel panel-default">
@@ -31,6 +35,7 @@ xxx.html同时加载后面两个js，目录代码全放xxxCatalog.js代码。
 	<div class="panel-body" id="treeDiv">
 		<div class="zTreeDemoBackground left">
 			<ul id="tree" class="ztree" style="overflow:auto;"></ul>
+			<!-- 右键菜单位置 -->
 			<div id="right_menu"></div>
 		</div>
 	</div>
@@ -44,7 +49,7 @@ var setting = {
 	},
 	async: {
 		enable : true,
-    //这里url，我们对ztree的有改造过
+    		//这里url，我们对ztree的有改造过
 		url : "OperDecController.getCatalog",
 		autoParam : ["catalog_id", "catalog_name", "catalog_type"]
 	},
@@ -62,7 +67,7 @@ var setting = {
 			var params = {catalog_id: treeNode.catalog_id};
 			me.catalog_id = treeNode.catalog_id;
 			me.catalog_name = treeNode.catalog_name;
-      //这里代码的意思是点击选中，加载右边列表的内容，后面我会介绍这个
+      			//这里代码的意思是点击选中，加载右边列表的内容，后面我会介绍这个
 			window.operDec.queryOperDecByCond(params);
 			
 			//停止冒泡，这里的用处是点击空白地方可以取消选中，所以里面的选中项目不让冒泡，以免触发取消选中效果。
@@ -71,7 +76,7 @@ var setting = {
 			}
 		},
 		onRightClick: function(event, treeId, treeNode){
-      //下面的menu变量我主要用于右键菜单的显示隐藏控制
+      			//下面的menu变量我主要用于右键菜单的显示隐藏控制
 			if($.isEmptyObject(treeNode)){
 				me.selNode = "";
 				me.menu1 = true;me.menu2 = false;me.menu3 = false;me.menu4 = false;
@@ -94,4 +99,32 @@ var setting = {
 };
 
 $.fn.zTree.init($("#tree"), setting);
+```
+下面初始化右键菜单
+```javascript
+$.contextMenu({
+  selector：'#right_menu',//上面html中定义的菜单div
+  items: {},//菜单项
+  callback： function(key, option){}//委托菜单事件
+});
+```
+
+新增&修改目录--这里新增跟修改都通过弹窗的方式显示界面，有些界面是通过在树的右方显示，这里先介绍通过弹窗的方式显示界面。
+```javascript
+window.top.Utils.showDialog($("#addStairCatalog").html(), {title: "新增根目录", autoClose: false, width: "550px", height: "230px",
+  yes: function(index){
+    var data = $("#addStairCatalogForm", window.top.document).xform("getData");
+    if($.isEmptyObject(data.catalog_name)){
+      window.top.Utils.alert("目录名称不能为空");
+      return false;
+    }
+    var params = {catalog_id: "-1", catalog_name: data.catalog_name, catalog_desc: data.catalog_desc};
+    me.insertStairCatalog(params);
+    window.top.layer.close(index);
+  },
+  success: function(){
+    $("#addStairCatalogForm", window.top.document).xform("clear");
+  },
+  cancel:function(){}
+});
 ```
