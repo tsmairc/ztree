@@ -100,7 +100,7 @@ var setting = {
 
 $.fn.zTree.init($("#tree"), setting);
 ```
-下面初始化右键菜单,右键菜单如下图所示：
+下面初始化右键菜单,右键菜单如下图所示：<br/>
 ![](https://github.com/tsmairc/ztree/blob/master/img/treeRight.png?raw=true)
 
 ```javascript
@@ -186,3 +186,84 @@ insertStairCatalog: function(params){
   });
 },
 ```
+修改树，修改树比较简单，直接修改selNode变量，再把变量更新到树时面。
+```javascriipt
+Invoker.async("OperDescController","modifyCatalog", params, function(data){
+  if(data.res_code != "00000"){
+    window.top.Utils.alert(data.res_message);
+  }
+  else{
+    var ztree = $.fn.zTree.getZTreeObj("tree");
+    window.operDescCatalog.selNode.catalog_name = data.result.catalog_name;
+    window.operDescCatalog.selNode.catalog_desc = data.result.catalog_desc;
+    ztree.updateNode(window.operDescCatalog.selNode);
+  }
+});
+```
+下面介绍直接在右边显示的情况：
+![](https://github.com/tsmairc/ztree/blob/master/img/tree2.png?raw=true)
+main.html -- main.js 主界面事件
+          -- catalog.js 主界面树事件（点击和右击和右击出现的菜单事件）
+	  -- main.js会load catalogOper.html和catalogOper.js，这两个文件用于右边界面保存的前端事件(我不喜欢用load方法，因为无法在直接dubugr代码，要在代码中加debugger。)<br/>
+修改和保存使用同一个界面，后台判断是否有目录id区分当前是新增还是修改。
+
+
+
+2.主页面新增行：（界面上方的绿色新增按钮）
+```javascript
+$("#operDesc_ins_btn").on("click", function(){
+  //是否已经选中目录
+  if(!window.operDescCatalog.catalog_id){
+    window.top.Utils.alert("请先选择目录");
+    return;
+  }
+  //TODO: 这里的详情和新增界面可以做在一起，前期没做分析，不知道可以做一起。
+  //隐藏列表界面
+  $("#listInfo").hide();
+  //隐藏详情界面
+  $("#detailInfo").hide();
+  //显示新增界面
+  $("#addOperDescDiv").show();
+  
+  var url = "operDescAdd.html";
+  var catalog_id = window.operDescCatalog.catalog_id;
+  var catalog_name = window.operDescCatalog.catalog_name;
+  //组装请求url
+  if(catalog_id){
+    url += "?catalog_id=" + catalog_id + "&catalog_name=" + encodeURIComponent(catalog_name);
+  }
+  //iframe加载页面
+  Utils.loadFrame($("#addOperDescDiv iframe"), url, function(){
+    Utils.refreshFrameHeight(this);
+  });
+});
+```
+
+```html
+<!-- 新增操作说明 与列表在同一位置-->
+<div class="col-sm-12" id="addOperDescDiv" style="display:none;">
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h3 class="panel-title">新增操作说明</h3>
+			<div class="panel-options">
+				<a href="javascript:void(0)">
+					<i class="fa-reply"></i>
+				</a>&nbsp;
+				<a href="javascript:void(0)" data-toggle="panel">
+					<span class="collapse-icon">&ndash;</span>
+					<span class="expand-icon">+</span>
+				</a>
+			</div>
+		</div>		
+		<div class="panel-body">
+	                <!-- 通加这个iframe加载对应的页面 -->
+			<iframe id="addOperDescFrame" scr="" width="100%" height="100%" scrolling="no" frameborder="0" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
+		</div>
+	</div>
+</div>
+```
+详情页面跟上面新增页面类似，上面也提到详情跟新增页面可以做在一起的，详情与新增的区别只是在
+~ 1.详情需要在加载页面的时候，向后台请求数据，并显示在界面中
+~ 2.详情需要在加载页面的时候，调整下方的保存、取消、编辑按钮，显示适合的按钮
+~ 3.后台需要做调整，把新增跟修改方法做在一起，根据前台传参有没主键id去区分哪个是新增，哪个是修改。
+
