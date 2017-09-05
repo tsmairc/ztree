@@ -205,9 +205,9 @@ Invoker.async("OperDescController","modifyCatalog", params, function(data){
 main.html<br/>
 ------------ main.js 主界面事件<br/>
 ------------ catalog.js 主界面树事件（点击和右击和右击出现的菜单事件）<br/>
------------- main.js会load catalogOper.html和catalogOper.js，这两个文件用于右边界面保存的前端事件(我不喜欢用load方法，因为无法在直接dubugr代码，要在代码中加debugger。)<br/>
+------------ main.js会load catalogOper.html和catalogOper.js，这两个文件用于右边界面保存的前端事件(我不喜欢用load方法，因为无法在直接dubug代码，要在代码中加debugger)<br/>
 当然上面也可以不使用load，直接将html代码写在主页面中，跟列表同级，待需要显示的时候，隐藏其它页面，显示当前页面。<br/>
-修改和保存使用同一个界面，后台判断是否有目录id区分当前是新增还是修改。
+修改和保存使用同一个界面，前端直接通过xform控件，让xform.loadData加载数据，后台判断是否有目录id区分当前是新增还是修改。
 
 
 
