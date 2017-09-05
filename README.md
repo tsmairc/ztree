@@ -100,7 +100,9 @@ var setting = {
 
 $.fn.zTree.init($("#tree"), setting);
 ```
-下面初始化右键菜单
+下面初始化右键菜单,右键菜单如下图所示：
+![](https://github.com/tsmairc/ztree/blob/master/img/treeRight.png?raw=true)
+
 ```javascript
 $.contextMenu({
   selector：'#right_menu',//上面html中定义的菜单div
@@ -109,22 +111,78 @@ $.contextMenu({
 });
 ```
 
-新增&修改目录--这里新增跟修改都通过弹窗的方式显示界面，有些界面是通过在树的右方显示，这里先介绍通过弹窗的方式显示界面。
+新增&修改目录--这里新增跟修改都通过弹窗的方式显示界面，有些界面是通过在树的右方显示，这里先介绍通过弹窗的方式显示界面,如下面所示效果图：
+![](https://github.com/tsmairc/ztree/blob/master/img/modifyTree2.png?raw=true)
+
 ```javascript
+/**
+ * arg1 要显示的html内容或者dom对象
+ * arg2 {title: "标题", width: "宽度", height: "高度", autoClose: "点击确定是否自动关闭", yes: "确定按钮方法", cancel: "取消按钮方法",    success: "层弹出后的成功回调方法"}
+ **/
 window.top.Utils.showDialog($("#addStairCatalog").html(), {title: "新增根目录", autoClose: false, width: "550px", height: "230px",
   yes: function(index){
-    var data = $("#addStairCatalogForm", window.top.document).xform("getData");
-    if($.isEmptyObject(data.catalog_name)){
+    //获取表格内容
+    var data = $("#addStairCatalogForm", window.top.document).xform("getData");
+    //校验
+    if($.isEmptyObject(data.catalog_name)){
       window.top.Utils.alert("目录名称不能为空");
       return false;
     }
-    var params = {catalog_id: "-1", catalog_name: data.catalog_name, catalog_desc: data.catalog_desc};
-    me.insertStairCatalog(params);
-    window.top.layer.close(index);
+    //组装入参报文
+    var params = {catalog_id: "-1", catalog_name: data.catalog_name, catalog_desc: data.catalog_desc};
+    //请求后台
+    me.insertStairCatalog(params);
+    //关闭显示层
+    window.top.layer.close(index);
   },
   success: function(){
-    $("#addStairCatalogForm", window.top.document).xform("clear");
+    //清空数据
+    $("#addStairCatalogForm", window.top.document).xform("clear");
   },
   cancel:function(){}
 });
+```
+
+下面介绍插入操作
+```javascript
+insertStairCatalog: function(params){
+  Invoker.async("OperDescController", "insertCatalog", params, function(data){
+    if(data.res_code != "00000"){
+      //请求不成功，显示错误信息
+      window.top.Utils.alert(data.res_message);
+    }
+    else{
+      //获取树
+      var ztree = $.fn.zTree.getZTreeObj("tree");
+      if(window.operDescCatalog.selNode){
+        //selNode是右键的时候添加上operDescCatalog的变量
+        if(window.operDescCatalog.selNode.isParent == false){
+          var catalog_child = {
+              catalog_id: data.result.catalog_id,
+              catalog_name: data.result.catalog_name,
+              catalog_type: "C",
+              catalog_desc: data.result.catalog_desc,
+              isParent: true
+          };
+	  //为selNode增加子树
+          ztree.addNodes(window.operDescCatalog.selNode, catalog_child);
+        }
+        //强行异步加载父节点的子节点
+	//reloadType = "refresh" 表示清空后重新加载
+        ztree.reAsyncChildNodes(window.operDescCatalog.selNode, "refresh");
+      }
+      else{
+        var catalog = {
+          catalog_id:data.result.catalog_id,
+          catalog_name:data.result.catalog_name,
+          catalog_type:"C",
+          catalog_desc: data.result.catalog_desc,
+          isParent : false
+        };
+	//增加节点
+        ztree.addNodes(null, catalog);
+      }
+    }
+  });
+},
 ```
